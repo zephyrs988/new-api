@@ -1,9 +1,11 @@
 FROM oven/bun:latest AS builder
 
 WORKDIR /build
-COPY ./web .
+COPY ./web/package.json ./web/bun.lock ./
 COPY ./VERSION .
-RUN bun install --force
+RUN bun install --force --no-cache
+COPY ./web .
+RUN rm -rf node_modules/.cache
 RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) bun run build
 
 FROM golang:alpine AS builder2

@@ -233,7 +233,11 @@ func (a *TaskAdaptor) FetchTask(baseUrl, key string, proxy string, body map[stri
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("x-goog-user-project", adc.ProjectID)
-	return service.GetHttpClient().Do(req)
+	client, err := service.NewProxyHttpClient(proxy)
+	if err != nil {
+		return nil, err
+	}
+	return client.Do(req)
 }
 
 func (a *TaskAdaptor) ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, error) {

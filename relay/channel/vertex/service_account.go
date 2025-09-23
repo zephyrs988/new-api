@@ -126,6 +126,8 @@ func exchangeJwtForAccessToken(signedJWT string, info *relaycommon.RelayInfo) (s
 
 	resp, err := client.PostForm(authURL, data)
 	if err != nil {
+		errMsg := fmt.Sprintf("authURL=%s, data=%s, error=%s", authURL, data.Encode(), err.Error())
+		logger.LogInfo(context.Background(), "exchangeJwtForAccessToken error="+errMsg)
 		return "", err
 	}
 	defer resp.Body.Close()
@@ -170,6 +172,8 @@ func exchangeJwtForAccessTokenWithProxy(signedJWT string, proxy string) (string,
 
 	resp, err := client.PostForm(authURL, data)
 	if err != nil {
+		errMsg := fmt.Sprintf("authURL=%s, data=%s, error=%s", authURL, data.Encode(), err.Error())
+		logger.LogInfo(context.Background(), "exchangeJwtForAccessToken error="+errMsg)
 		return "", err
 	}
 	defer resp.Body.Close()

@@ -115,7 +115,7 @@ func updateSunoTaskAll(ctx context.Context, channelId int, taskIds []string, tas
 	if adaptor == nil {
 		return errors.New("adaptor not found")
 	}
-	resp, err := adaptor.FetchTask(*channel.BaseURL, channel.Key, map[string]any{
+	resp, err := adaptor.FetchTask(*channel.BaseURL, channel.Key, channel.GetSetting().Proxy, map[string]any{
 		"ids": taskIds,
 	})
 	if err != nil {

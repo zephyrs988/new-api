@@ -1,6 +1,7 @@
 package vertex
 
 import (
+	"context"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"one-api/logger"
 	relaycommon "one-api/relay/common"
 	"one-api/service"
 	"strings"
@@ -112,6 +114,7 @@ func exchangeJwtForAccessToken(signedJWT string, info *relaycommon.RelayInfo) (s
 
 	var client *http.Client
 	var err error
+	logger.LogInfo(context.Background(), "exchangeJwtForAccessToken info.ChannelSetting.Proxy="+info.ChannelSetting.Proxy)
 	if info.ChannelSetting.Proxy != "" {
 		client, err = service.NewProxyHttpClient(info.ChannelSetting.Proxy)
 		if err != nil {
@@ -155,6 +158,7 @@ func exchangeJwtForAccessTokenWithProxy(signedJWT string, proxy string) (string,
 
 	var client *http.Client
 	var err error
+	logger.LogInfo(context.Background(), "exchangeJwtForAccessToken info.ChannelSetting.Proxy="+proxy)
 	if proxy != "" {
 		client, err = service.NewProxyHttpClient(proxy)
 		if err != nil {

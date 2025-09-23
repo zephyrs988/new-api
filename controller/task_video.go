@@ -65,7 +65,7 @@ func updateVideoSingleTask(ctx context.Context, adaptor channel.TaskAdaptor, cha
 		logger.LogError(ctx, fmt.Sprintf("Task %s not found in taskM", taskId))
 		return fmt.Errorf("task %s not found", taskId)
 	}
-	resp, err := adaptor.FetchTask(baseURL, channel.Key, map[string]any{
+	resp, err := adaptor.FetchTask(baseURL, channel.Key, channel.GetSetting().Proxy, map[string]any{
 		"task_id": taskId,
 		"action":  task.Action,
 	})

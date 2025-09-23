@@ -3,7 +3,7 @@ FROM oven/bun:latest AS builder
 WORKDIR /build
 COPY ./web/package.json ./web/bun.lock ./
 COPY ./VERSION .
-RUN bun install --force --no-cache
+RUN bun install
 COPY ./web .
 RUN rm -rf node_modules/.cache
 RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) bun run build

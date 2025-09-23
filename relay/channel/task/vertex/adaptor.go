@@ -119,7 +119,7 @@ func (a *TaskAdaptor) BuildRequestHeader(c *gin.Context, req *http.Request, info
 		return fmt.Errorf("failed to decode credentials: %w", err)
 	}
 
-	token, err := vertexcore.AcquireAccessToken(*adc, "")
+	token, err := vertexcore.AcquireAccessToken(*adc, info.ChannelSetting.Proxy)
 	if err != nil {
 		return fmt.Errorf("failed to acquire access token: %w", err)
 	}

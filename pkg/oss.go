@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	sdk "github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"one-api/common"
 	"one-api/logger"
 	"os"
 	"strings"
@@ -23,7 +24,7 @@ func InitAliyunOssClient() (err error) {
 	config := os.Getenv("ALIYUN_OSS_CONN_STRING")
 	configParams := strings.Split(config, "|")
 	if config == "" || len(configParams) != 6 {
-		logger.LogInfo(context.Background(), "ALIYUN_OSS_CONN_STRING not set or incorrect, Aliyun oss is not enabled")
+		common.SysLog("ALIYUN_OSS_CONN_STRING not set or incorrect, Aliyun oss is not enabled")
 		return nil
 	}
 	endpoint := configParams[0]
@@ -35,12 +36,12 @@ func InitAliyunOssClient() (err error) {
 
 	client, err := sdk.New(endpoint, accessKeyID, accessKeySecret)
 	if err != nil {
-		logger.LogError(context.Background(), "NewAliyunOssClient oss.New err,err="+err.Error())
+		common.SysLog("NewAliyunOssClient oss.New err,err=" + err.Error())
 		panic(err)
 	}
 	bucket, err := client.Bucket(bucketName)
 	if err != nil {
-		logger.LogError(context.Background(), "NewAliyunOssClient client.Bucket err,err="+err.Error())
+		common.SysLog("NewAliyunOssClient client.Bucket err,err=" + err.Error())
 		panic(err)
 	}
 	AliyunOssClient = &aliyunOss{
@@ -49,6 +50,7 @@ func InitAliyunOssClient() (err error) {
 		Path:      dirName,
 		CdnDomain: cdnDomain,
 	}
+	common.SysLog("InitAliyunOssClient success")
 	return
 }
 

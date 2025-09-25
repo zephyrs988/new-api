@@ -151,7 +151,7 @@ func main() {
 	if port == "" {
 		port = strconv.Itoa(*common.Port)
 	}
-	log.Println("v1.0.4 Listening and serving HTTP on :" + port)
+	log.Println("v1.0.5 Listening and serving HTTP on :" + port)
 	err = server.Run(":" + port)
 	if err != nil {
 		common.FatalLog("failed to start HTTP server: " + err.Error())

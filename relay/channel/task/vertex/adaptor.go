@@ -8,8 +8,10 @@ import (
 	"io"
 	"net/http"
 	"one-api/model"
+	"one-api/pkg"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -274,7 +276,19 @@ func (a *TaskAdaptor) ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, e
 					mime = "video/" + enc
 				}
 			}
-			ti.Url = "data:" + mime + ";base64," + v0.BytesBase64Encoded
+			if pkg.AliyunOssClient != nil {
+				fileName := fmt.Sprintf("%d.%s", time.Now().UnixNano(), getVideoExtensionByMimeType(mime))
+				videoBytes, err := base64.StdEncoding.DecodeString(v0.BytesBase64Encoded)
+				if err == nil {
+					cdnUrl, uploadErr := pkg.AliyunOssClient.UploadFileWithBytes(videoBytes, "video", fileName)
+					if uploadErr == nil {
+						ti.Url = cdnUrl
+					}
+				}
+			}
+			if ti.Url == "" {
+				ti.Url = "data:" + mime + ";base64," + v0.BytesBase64Encoded
+			}
 			return ti, nil
 		}
 	}
@@ -287,7 +301,19 @@ func (a *TaskAdaptor) ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, e
 		if !strings.Contains(enc, "/") {
 			mime = "video/" + enc
 		}
-		ti.Url = "data:" + mime + ";base64," + op.Response.BytesBase64Encoded
+		if pkg.AliyunOssClient != nil {
+			fileName := fmt.Sprintf("%d.%s", time.Now().UnixNano(), getVideoExtensionByMimeType(mime))
+			videoBytes, err := base64.StdEncoding.DecodeString(op.Response.BytesBase64Encoded)
+			if err == nil {
+				cdnUrl, uploadErr := pkg.AliyunOssClient.UploadFileWithBytes(videoBytes, "video", fileName)
+				if uploadErr == nil {
+					ti.Url = cdnUrl
+				}
+			}
+		}
+		if ti.Url == "" {
+			ti.Url = "data:" + mime + ";base64," + op.Response.BytesBase64Encoded
+		}
 		return ti, nil
 	}
 	if op.Response.Video != "" { // some variants use `video` as base64
@@ -299,7 +325,19 @@ func (a *TaskAdaptor) ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, e
 		if !strings.Contains(enc, "/") {
 			mime = "video/" + enc
 		}
-		ti.Url = "data:" + mime + ";base64," + op.Response.Video
+		if pkg.AliyunOssClient != nil {
+			fileName := fmt.Sprintf("%d.%s", time.Now().UnixNano(), getVideoExtensionByMimeType(mime))
+			videoBytes, err := base64.StdEncoding.DecodeString(op.Response.Video)
+			if err == nil {
+				cdnUrl, uploadErr := pkg.AliyunOssClient.UploadFileWithBytes(videoBytes, "video", fileName)
+				if uploadErr == nil {
+					ti.Url = cdnUrl
+				}
+			}
+		}
+		if ti.Url == "" {
+			ti.Url = "data:" + mime + ";base64," + op.Response.Video
+		}
 		return ti, nil
 	}
 	return ti, nil
@@ -356,4 +394,11 @@ func extractProjectFromOperationName(name string) string {
 		return m[1]
 	}
 	return ""
+}
+
+func getVideoExtensionByMimeType(mimeType string) string {
+	if mimeType == "" {
+		return "mp4"
+	}
+	return strings.TrimPrefix(mimeType, "video/")
 }

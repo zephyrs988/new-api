@@ -11,6 +11,7 @@ import (
 	"one-api/logger"
 	"one-api/middleware"
 	"one-api/model"
+	"one-api/pkg"
 	"one-api/router"
 	"one-api/service"
 	"one-api/setting/ratio_setting"
@@ -201,6 +202,11 @@ func InitResources() error {
 
 	// Initialize Redis
 	err = common.InitRedisClient()
+	if err != nil {
+		return err
+	}
+
+	err = pkg.InitAliyunOssClient()
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package gemini
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"one-api/constant"
 	"one-api/dto"
 	"one-api/logger"
+	"one-api/pkg"
 	"one-api/relay/channel/openai"
 	relaycommon "one-api/relay/common"
 	"one-api/relay/helper"
@@ -18,6 +20,7 @@ import (
 	"one-api/types"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
@@ -754,7 +757,20 @@ func responseGeminiChat2OpenAI(c *gin.Context, response *dto.GeminiChatResponse)
 				if part.InlineData != nil {
 					// 媒体内容
 					if strings.HasPrefix(part.InlineData.MimeType, "image") {
-						imgText := "![image](data:" + part.InlineData.MimeType + ";base64," + part.InlineData.Data + ")"
+						var imgText string
+						if pkg.AliyunOssClient != nil {
+							fileName := fmt.Sprintf("%d.%s", time.Now().UnixNano(), getImageExtensionByMimeType(part.InlineData.MimeType))
+							imageBytes, err := base64.StdEncoding.DecodeString(part.InlineData.Data)
+							if err == nil {
+								cdnUrl, uploadErr := pkg.AliyunOssClient.UploadFileWithBytes(imageBytes, response.ModelVersion, fileName)
+								if uploadErr == nil {
+									imgText = "![image](" + cdnUrl + ")"
+								}
+							}
+						}
+						if imgText == "" {
+							imgText = "![image](data:" + part.InlineData.MimeType + ";base64," + part.InlineData.Data + ")"
+						}
 						texts = append(texts, imgText)
 					} else {
 						// 其他媒体类型，直接显示链接
@@ -837,7 +853,20 @@ func streamResponseGeminiChat2OpenAI(geminiResponse *dto.GeminiChatResponse) (*d
 		for _, part := range candidate.Content.Parts {
 			if part.InlineData != nil {
 				if strings.HasPrefix(part.InlineData.MimeType, "image") {
-					imgText := "![image](data:" + part.InlineData.MimeType + ";base64," + part.InlineData.Data + ")"
+					var imgText string
+					if pkg.AliyunOssClient != nil {
+						fileName := fmt.Sprintf("%d.%s", time.Now().UnixNano(), getImageExtensionByMimeType(part.InlineData.MimeType))
+						imageBytes, err := base64.StdEncoding.DecodeString(part.InlineData.Data)
+						if err == nil {
+							cdnUrl, uploadErr := pkg.AliyunOssClient.UploadFileWithBytes(imageBytes, geminiResponse.ModelVersion, fileName)
+							if uploadErr == nil {
+								imgText = "![image](" + cdnUrl + ")"
+							}
+						}
+					}
+					if imgText == "" {
+						imgText = "![image](data:" + part.InlineData.MimeType + ";base64," + part.InlineData.Data + ")"
+					}
 					texts = append(texts, imgText)
 				}
 			} else if part.FunctionCall != nil {
@@ -1180,4 +1209,11 @@ func GeminiImageHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.
 	}
 
 	return usage, nil
+}
+
+func getImageExtensionByMimeType(mimeType string) string {
+	if mimeType == "" {
+		return "png"
+	}
+	return strings.TrimPrefix(mimeType, "image/")
 }

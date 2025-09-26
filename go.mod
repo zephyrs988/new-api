@@ -7,6 +7,7 @@ toolchain go1.24.7
 
 require (
 	github.com/Calcium-Ion/go-epay v0.0.4
+	github.com/aliyun/aliyun-oss-go-sdk v2.2.9+incompatible
 	github.com/andybalholm/brotli v1.1.1
 	github.com/anknown/ahocorasick v0.0.0-20190904063843-d75dbd5169c0
 	github.com/aws/aws-sdk-go-v2 v1.37.2
@@ -47,7 +48,6 @@ require (
 )
 
 require (
-	github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible // indirect
 	github.com/anknown/darts v0.0.0-20151216065714-83ff685239e6 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.2 // indirect

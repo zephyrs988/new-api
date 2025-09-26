@@ -37,12 +37,12 @@ func InitAliyunOssClient() (err error) {
 	client, err := sdk.New(endpoint, accessKeyID, accessKeySecret)
 	if err != nil {
 		common.SysLog("NewAliyunOssClient oss.New err,err=" + err.Error())
-		panic(err)
+		return
 	}
 	bucket, err := client.Bucket(bucketName)
 	if err != nil {
 		common.SysLog("NewAliyunOssClient client.Bucket err,err=" + err.Error())
-		panic(err)
+		return
 	}
 	AliyunOssClient = &aliyunOss{
 		Client:    client,

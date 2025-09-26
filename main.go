@@ -206,9 +206,6 @@ func InitResources() error {
 		return err
 	}
 
-	err = pkg.InitAliyunOssClient()
-	if err != nil {
-		return err
-	}
+	_ = pkg.InitAliyunOssClient()
 	return nil
 }

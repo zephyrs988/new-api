@@ -200,9 +200,11 @@ func InitDB() (err error) {
 		if common.UsingMySQL {
 			//_, _ = sqlDB.Exec("ALTER TABLE channels MODIFY model_mapping TEXT;") // TODO: delete this line when most users have upgraded
 		}
-		common.SysLog("database migration started")
-		err = migrateDB()
-		return err
+		if os.Getenv("SQL_MIGRATION_ENABLE") == "true" {
+			common.SysLog("database migration started")
+			err = migrateDB()
+			return err
+		}
 	} else {
 		common.FatalLog(err)
 	}

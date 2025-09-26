@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	sdk "github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"one-api/common"
 	"one-api/logger"
 	"os"
 	"strings"
+
+	sdk "github.com/aliyun/aliyun-oss-go-sdk/oss"
 )
 
 type aliyunOss struct {

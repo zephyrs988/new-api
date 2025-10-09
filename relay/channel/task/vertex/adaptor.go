@@ -2,11 +2,13 @@ package vertex
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"one-api/logger"
 	"one-api/model"
 	"one-api/pkg"
 	"regexp"
@@ -281,6 +283,9 @@ func (a *TaskAdaptor) ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, e
 				videoBytes, err := base64.StdEncoding.DecodeString(v0.BytesBase64Encoded)
 				if err == nil {
 					cdnUrl, uploadErr := pkg.AliyunOssClient.UploadFileWithBytes(videoBytes, "video", fileName)
+					if uploadErr != nil {
+						logger.LogError(context.Background(), fmt.Sprintf("upload file error: %v", uploadErr))
+					}
 					if uploadErr == nil {
 						ti.Url = cdnUrl
 					}
@@ -306,6 +311,9 @@ func (a *TaskAdaptor) ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, e
 			videoBytes, err := base64.StdEncoding.DecodeString(op.Response.BytesBase64Encoded)
 			if err == nil {
 				cdnUrl, uploadErr := pkg.AliyunOssClient.UploadFileWithBytes(videoBytes, "video", fileName)
+				if uploadErr != nil {
+					logger.LogError(context.Background(), fmt.Sprintf("upload file error: %v", uploadErr))
+				}
 				if uploadErr == nil {
 					ti.Url = cdnUrl
 				}
@@ -330,6 +338,9 @@ func (a *TaskAdaptor) ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, e
 			videoBytes, err := base64.StdEncoding.DecodeString(op.Response.Video)
 			if err == nil {
 				cdnUrl, uploadErr := pkg.AliyunOssClient.UploadFileWithBytes(videoBytes, "video", fileName)
+				if uploadErr != nil {
+					logger.LogError(context.Background(), fmt.Sprintf("upload file error: %v", uploadErr))
+				}
 				if uploadErr == nil {
 					ti.Url = cdnUrl
 				}

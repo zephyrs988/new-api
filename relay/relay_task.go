@@ -306,10 +306,17 @@ func videoFetchByIDRespBodyBuilder(c *gin.Context) (respBody []byte, taskResp *d
 			return
 		}
 		defer resp.Body.Close()
-		body, err2 := io.ReadAll(resp.Body)
+
+		// 使用配置化的响应优化器处理大响应体
+		optimizer := GetOptimizedResponseOptimizer()
+
+		// 先读取响应体用于后续处理
+		body, err2 := optimizer.OptimizedReadAll(resp.Body)
 		if err2 != nil {
 			return
 		}
+
+		// 解析任务结果
 		ti, err2 := adaptor.ParseTaskResult(body)
 		if err2 == nil && ti != nil {
 			if ti.Status != "" {

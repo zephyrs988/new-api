@@ -5,14 +5,13 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"golang.org/x/image/webp"
 	"image"
 	"io"
 	"net/http"
 	"one-api/common"
 	"one-api/constant"
 	"strings"
-
-	"golang.org/x/image/webp"
 )
 
 func DecodeBase64ImageData(base64String string) (image.Config, string, string, error) {

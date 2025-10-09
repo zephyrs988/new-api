@@ -1,6 +1,7 @@
 package gemini
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -763,6 +764,9 @@ func responseGeminiChat2OpenAI(c *gin.Context, response *dto.GeminiChatResponse)
 							imageBytes, err := base64.StdEncoding.DecodeString(part.InlineData.Data)
 							if err == nil {
 								cdnUrl, uploadErr := pkg.AliyunOssClient.UploadFileWithBytes(imageBytes, response.ModelVersion, fileName)
+								if uploadErr != nil {
+									logger.LogError(context.Background(), fmt.Sprintf("upload file error: %v", uploadErr))
+								}
 								if uploadErr == nil {
 									imgText = "![image](" + cdnUrl + ")"
 								}
@@ -859,6 +863,9 @@ func streamResponseGeminiChat2OpenAI(geminiResponse *dto.GeminiChatResponse) (*d
 						imageBytes, err := base64.StdEncoding.DecodeString(part.InlineData.Data)
 						if err == nil {
 							cdnUrl, uploadErr := pkg.AliyunOssClient.UploadFileWithBytes(imageBytes, geminiResponse.ModelVersion, fileName)
+							if uploadErr != nil {
+								logger.LogError(context.Background(), fmt.Sprintf("upload file error: %v", uploadErr))
+							}
 							if uploadErr == nil {
 								imgText = "![image](" + cdnUrl + ")"
 							}

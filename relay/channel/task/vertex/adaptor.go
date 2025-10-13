@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"one-api/common"
 	"one-api/logger"
 	"one-api/model"
 	"one-api/pkg"
@@ -144,12 +145,42 @@ func (a *TaskAdaptor) BuildRequestBody(c *gin.Context, info *relaycommon.RelayIn
 		Instances:  []map[string]any{{"prompt": req.Prompt}},
 		Parameters: map[string]any{},
 	}
+	if req.Image != "" {
+		mimeType, data, err := common.GetFileFromUrl(req.Image)
+		if err != nil {
+			return nil, err
+		}
+		body.Instances = []map[string]any{
+			{
+				"prompt": req.Prompt,
+				"image": map[string]interface{}{
+					"bytesBase64Encoded": data,
+					"mimeType":           mimeType,
+				},
+			},
+		}
+	}
+
 	if req.Metadata != nil {
 		if v, ok := req.Metadata["storageUri"]; ok {
 			body.Parameters["storageUri"] = v
 		}
 		if v, ok := req.Metadata["sampleCount"]; ok {
 			body.Parameters["sampleCount"] = v
+		}
+		if v, ok := req.Metadata["aspectRatio"]; ok {
+			body.Parameters["aspectRatio"] = v
+		}
+
+		if v, ok := req.Metadata["durationSeconds"]; ok {
+			body.Parameters["durationSeconds"] = v
+		}
+
+		if v, ok := req.Metadata["negativePrompt"]; ok {
+			body.Parameters["negativePrompt"] = v
+		}
+		if v, ok := req.Metadata["seed"]; ok {
+			body.Parameters["seed"] = v
 		}
 	}
 	if _, ok := body.Parameters["sampleCount"]; !ok {
@@ -280,6 +311,12 @@ func (a *TaskAdaptor) ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, e
 			}
 			if pkg.AliyunOssClient != nil {
 				fileName := fmt.Sprintf("%d.%s", time.Now().UnixNano(), getVideoExtensionByMimeType(mime))
+				// 通过正则提取出operationName
+				operationName := regexp.MustCompile(`operations/([^/]+)`).FindStringSubmatch(op.Name)
+				if len(operationName) > 0 {
+					fileName = fmt.Sprintf("%s.%s", operationName[1], getVideoExtensionByMimeType(mime))
+				}
+
 				videoBytes, err := base64.StdEncoding.DecodeString(v0.BytesBase64Encoded)
 				if err == nil {
 					cdnUrl, uploadErr := pkg.AliyunOssClient.UploadFileWithBytes(videoBytes, "video", fileName)

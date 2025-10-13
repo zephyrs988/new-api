@@ -3,7 +3,6 @@ package relay
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -31,13 +30,14 @@ func NewResponseOptimizer() *ResponseOptimizer {
 	}
 }
 
-// OptimizedReadAll 优化的读取方法，使用缓冲区和并发处理
+// OptimizedReadAll 优化的读取方法，使用缓冲区和智能超时处理
 func (ro *ResponseOptimizer) OptimizedReadAll(reader io.Reader) ([]byte, error) {
 	startTime := time.Now()
 
-	// 创建带超时的上下文
-	ctx, cancel := context.WithTimeout(context.Background(), ro.timeout)
-	defer cancel()
+	// 使用智能超时处理器
+	timeoutHandler := NewTimeoutHandler()
+	timeoutHandler.SetBaseTimeout(ro.timeout)
+	timeoutHandler.SetMaxTimeout(ro.timeout * 2) // 最大超时时间为配置的2倍
 
 	// 使用限制读取器
 	limitedReader := io.LimitReader(reader, ro.maxSize)
@@ -45,49 +45,43 @@ func (ro *ResponseOptimizer) OptimizedReadAll(reader io.Reader) ([]byte, error) 
 	// 使用缓冲读取器提高性能
 	bufferedReader := bufio.NewReaderSize(limitedReader, ro.bufferSize)
 
-	// 使用管道进行并发处理
-	pipeReader, pipeWriter := io.Pipe()
+	// 使用带重试的读取操作
+	operation := func() ([]byte, error) {
+		return timeoutHandler.AdaptiveTimeout(bufferedReader, ro.maxSize)
+	}
 
-	// 启动写入协程
-	go func() {
-		defer pipeWriter.Close()
-		_, err := io.Copy(pipeWriter, bufferedReader)
-		if err != nil {
-			common.SysLog(fmt.Sprintf("Error copying data: %v", err))
-		}
-	}()
-
-	// 读取数据
-	var result bytes.Buffer
-	done := make(chan error, 1)
-
-	go func() {
-		_, err := io.Copy(&result, pipeReader)
-		done <- err
-	}()
-
-	var err error
-	select {
-	case err = <-done:
-		if err != nil {
-			// 记录错误
-			GlobalPerformanceMonitor.RecordReadOperation(0, time.Since(startTime), false, true)
-			return nil, fmt.Errorf("failed to read response: %w", err)
-		}
-	case <-ctx.Done():
-		// 记录超时错误
+	// 执行带退避的重试
+	result, err := timeoutHandler.RetryWithBackoff(operation)
+	if err != nil {
+		// 记录错误
 		GlobalPerformanceMonitor.RecordReadOperation(0, time.Since(startTime), false, true)
-		return nil, fmt.Errorf("read timeout after %v", ro.timeout)
+		return nil, fmt.Errorf("failed to read response after retries: %w", err)
 	}
 
 	// 记录性能指标
 	readTime := time.Since(startTime)
-	bytesRead := int64(result.Len())
+	bytesRead := int64(len(result))
 	truncated := bytesRead == ro.maxSize
 
 	GlobalPerformanceMonitor.RecordReadOperation(bytesRead, readTime, truncated, false)
 
-	return result.Bytes(), nil
+	// 记录超时诊断信息
+	if readTime > ro.timeout {
+		common.SysLog(fmt.Sprintf("Slow response detected: %v for %d bytes (timeout: %v)",
+			readTime, bytesRead, ro.timeout))
+
+		// 记录超时事件用于诊断
+		GlobalTimeoutDiagnostics.RecordTimeoutEvent(TimeoutEvent{
+			Timestamp:    time.Now(),
+			Duration:     readTime,
+			BytesRead:    bytesRead,
+			ExpectedSize: ro.maxSize,
+			ErrorType:    "slow_response",
+			Source:       "response_optimizer",
+		})
+	}
+
+	return result, nil
 }
 
 // ParseTaskResultOptimized 优化的任务结果解析

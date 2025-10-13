@@ -29,7 +29,7 @@ type OptimizationConfig struct {
 func DefaultOptimizationConfig() *OptimizationConfig {
 	return &OptimizationConfig{
 		MaxResponseSize:   20 * 1024 * 1024, // 20MB
-		ReadTimeout:       30 * time.Second, // 30秒
+		ReadTimeout:       60 * time.Second, // 60秒
 		BufferSize:        64 * 1024,        // 64KB
 		Concurrency:       2,                // 2个并发
 		EnableStreaming:   true,             // 启用流式处理

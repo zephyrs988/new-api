@@ -179,6 +179,11 @@ func (a *TaskAdaptor) BuildRequestBody(c *gin.Context, info *relaycommon.RelayIn
 		if v, ok := req.Metadata["negativePrompt"]; ok {
 			body.Parameters["negativePrompt"] = v
 		}
+
+		if v, ok := req.Metadata["resolution"]; ok {
+			body.Parameters["resolution"] = v
+		}
+
 		if v, ok := req.Metadata["seed"]; ok {
 			body.Parameters["seed"] = v
 		}

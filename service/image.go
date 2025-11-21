@@ -9,9 +9,10 @@ import (
 	"image"
 	"io"
 	"net/http"
-	"one-api/common"
-	"one-api/constant"
 	"strings"
+
+	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
 )
 
 func DecodeBase64ImageData(base64String string) (image.Config, string, string, error) {

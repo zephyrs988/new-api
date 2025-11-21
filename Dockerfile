@@ -4,6 +4,7 @@ ENV GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux
 
+
 WORKDIR /build
 
 ADD go.mod go.sum ./
@@ -15,7 +16,7 @@ RUN go build -ldflags "-s -w -X 'one-api/common.Version=$(cat VERSION)'" -o one-
 FROM alpine
 
 RUN apk upgrade --no-cache \
-    && apk add --no-cache ca-certificates tzdata ffmpeg \
+    && apk add --no-cache ca-certificates tzdata \
     && update-ca-certificates
 
 COPY --from=builder /build/one-api /

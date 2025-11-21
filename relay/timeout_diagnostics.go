@@ -2,7 +2,7 @@ package relay
 
 import (
 	"fmt"
-	"one-api/common"
+	"github.com/QuantumNous/new-api/common"
 	"sync"
 	"time"
 )

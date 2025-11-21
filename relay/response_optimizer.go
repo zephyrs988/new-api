@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/QuantumNous/new-api/common"
+	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	"io"
-	"one-api/common"
-	relaycommon "one-api/relay/common"
 	"sync"
 	"time"
 )

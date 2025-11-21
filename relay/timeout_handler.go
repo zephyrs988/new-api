@@ -3,8 +3,8 @@ package relay
 import (
 	"context"
 	"fmt"
+	"github.com/QuantumNous/new-api/common"
 	"io"
-	"one-api/common"
 	"time"
 )
 

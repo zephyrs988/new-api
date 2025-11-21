@@ -325,6 +325,9 @@ func videoFetchByIDRespBodyBuilder(c *gin.Context) (respBody []byte, taskResp *d
 			if ti.Progress != "" {
 				originTask.Progress = ti.Progress
 			}
+			if ti.Reason != "" {
+				originTask.FailReason = ti.Reason
+			}
 			if ti.Url != "" {
 				originTask.FailReason = ti.Url
 			}
@@ -355,12 +358,12 @@ func videoFetchByIDRespBodyBuilder(c *gin.Context) (respBody []byte, taskResp *d
 				status = "queued"
 			}
 			out := map[string]any{
-				"error":    nil,
+				"error":    originTask.FailReason,
 				"format":   format,
 				"metadata": nil,
 				"status":   status,
 				"task_id":  originTask.TaskID,
-				"url":      originTask.FailReason,
+				"url":      ti.Url,
 			}
 			respBody, _ = json.Marshal(dto.TaskResponse[any]{
 				Code: "success",

@@ -61,6 +61,12 @@ export default defineConfig({
     },
   },
   build: {
+    // 1. 禁用 Source Map：这会显著降低内存使用，因为不需要同时生成和处理映射文件
+    sourcemap: false,
+
+    // 2. 强制使用 terser 或 esbuild 进行最小化，并配置其选项
+    // 假设您正在使用默认的 Rollup/Terser 流程进行压缩
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {

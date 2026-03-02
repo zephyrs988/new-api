@@ -6,13 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/QuantumNous/new-api/pkg"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/QuantumNous/new-api/pkg"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
@@ -1107,7 +1108,12 @@ func responseGeminiChat2OpenAI(c *gin.Context, response *dto.GeminiChatResponse)
 				// Other reasons
 				choice.FinishReason = constant.FinishReasonContentFilter
 			default:
-				choice.FinishReason = fmt.Sprintf("[%s] %s", *candidate.FinishReason, *candidate.FinishMessage)
+				if candidate.FinishReason != nil && candidate.FinishMessage != nil {
+					choice.FinishReason = fmt.Sprintf("[%s] %s", *candidate.FinishReason, *candidate.FinishMessage)
+				}
+				if candidate.FinishReason != nil {
+					choice.FinishReason = fmt.Sprintf("[%s]", *candidate.FinishReason)
+				}
 			}
 		}
 		if isToolCall {
@@ -1164,7 +1170,13 @@ func streamResponseGeminiChat2OpenAI(geminiResponse *dto.GeminiChatResponse) (*d
 				// Other reasons
 				choice.FinishReason = &constant.FinishReasonContentFilter
 			default:
-				finishReason := fmt.Sprintf("[%s] %s", *candidate.FinishReason, *candidate.FinishMessage)
+				var finishReason string
+				if candidate.FinishReason != nil && candidate.FinishMessage != nil {
+					finishReason = fmt.Sprintf("[%s] %s", *candidate.FinishReason, *candidate.FinishMessage)
+				}
+				if candidate.FinishReason != nil {
+					finishReason = fmt.Sprintf("[%s]", *candidate.FinishReason)
+				}
 				choice.FinishReason = &finishReason
 			}
 		}

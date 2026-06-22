@@ -1,32 +1,22 @@
-# Install default frontend deps with bun (exact versions via bun.lock)
-FROM oven/bun:1 AS deps-default
+FROM oven/bun:1@sha256:0733e50325078969732ebe3b15ce4c4be5082f18c4ac1a0f0ca4839c2e4e42a7 AS builder
+
 WORKDIR /build
 COPY web/default/package.json .
 COPY web/default/bun.lock .
-RUN bun install --frozen-lockfile
-
-# Build default frontend with node (avoids bun baseline bin-shim bug)
-FROM node:20-alpine AS builder
-WORKDIR /build
-COPY --from=deps-default /build/node_modules ./node_modules
+RUN bun install
 COPY ./web/default .
 COPY ./VERSION .
-RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) node_modules/.bin/rsbuild build
+RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) bun run build
 
-# Install classic frontend deps with bun (exact versions via bun.lock)
-FROM oven/bun:1 AS deps-classic
+FROM oven/bun:1@sha256:0733e50325078969732ebe3b15ce4c4be5082f18c4ac1a0f0ca4839c2e4e42a7 AS builder-classic
+
 WORKDIR /build
 COPY web/classic/package.json .
 COPY web/classic/bun.lock .
-RUN bun install --frozen-lockfile
-
-# Build classic frontend with node (avoids bun baseline bin-shim bug)
-FROM node:20-alpine AS builder-classic
-WORKDIR /build
-COPY --from=deps-classic /build/node_modules ./node_modules
+RUN bun install
 COPY ./web/classic .
 COPY ./VERSION .
-RUN VITE_REACT_APP_VERSION=$(cat VERSION) node_modules/.bin/vite build
+RUN VITE_REACT_APP_VERSION=$(cat VERSION) bun run build
 
 FROM golang:1.26.1-alpine@sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039 AS builder2
 ENV GO111MODULE=on CGO_ENABLED=0

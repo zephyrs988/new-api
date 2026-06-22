@@ -6,7 +6,7 @@ COPY web/default/bun.lock .
 RUN bun install --frozen-lockfile
 COPY ./web/default .
 COPY ./VERSION .
-RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) bun run build
+RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) bunx rsbuild build
 
 FROM oven/bun:1 AS builder-classic
 
@@ -16,7 +16,7 @@ COPY web/classic/bun.lock .
 RUN bun install --frozen-lockfile
 COPY ./web/classic .
 COPY ./VERSION .
-RUN VITE_REACT_APP_VERSION=$(cat VERSION) bun run build
+RUN VITE_REACT_APP_VERSION=$(cat VERSION) bunx vite build
 
 FROM golang:1.26.1-alpine@sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039 AS builder2
 ENV GO111MODULE=on CGO_ENABLED=0

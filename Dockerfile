@@ -2,7 +2,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /build
 COPY web/default/package.json .
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY ./web/default .
 COPY ./VERSION .
 RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) npm run build
@@ -11,7 +11,7 @@ FROM node:20-alpine AS builder-classic
 
 WORKDIR /build
 COPY web/classic/package.json .
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY ./web/classic .
 COPY ./VERSION .
 RUN VITE_REACT_APP_VERSION=$(cat VERSION) npm run build

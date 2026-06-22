@@ -458,6 +458,7 @@ type GeminiChatResponse struct {
 	Candidates     []GeminiChatCandidate     `json:"candidates"`
 	PromptFeedback *GeminiChatPromptFeedback `json:"promptFeedback,omitempty"`
 	UsageMetadata  GeminiUsageMetadata       `json:"usageMetadata"`
+	ModelVersion   string                    `json:"modelVersion"`
 }
 
 type GeminiUsageMetadata struct {

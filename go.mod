@@ -60,8 +60,11 @@ require (
 	gorm.io/gorm v1.25.2
 )
 
+require golang.org/x/time v0.15.0 // indirect
+
 require (
 	github.com/DmitriyVTitov/size v1.5.0 // indirect
+	github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible
 	github.com/anknown/darts v0.0.0-20151216065714-83ff685239e6 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.21 // indirect

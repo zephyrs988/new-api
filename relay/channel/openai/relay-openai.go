@@ -1,15 +1,18 @@
 package openai
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/dto"
 	"github.com/QuantumNous/new-api/logger"
+	"github.com/QuantumNous/new-api/pkg"
 	"github.com/QuantumNous/new-api/relay/channel/openrouter"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	"github.com/QuantumNous/new-api/relay/helper"
@@ -22,18 +25,70 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// uploadBase64ImageToOss detects base64-encoded image content in a stream delta,
+// uploads it to Aliyun OSS, and returns a markdown image reference.
+// If OSS is unavailable or content is not a base64 image, the original string is returned unchanged.
+func uploadBase64ImageToOss(content string) string {
+	if pkg.AliyunOssClient == nil {
+		return content
+	}
+	// Detect common base64 image prefixes (PNG, JPEG, GIF, WebP)
+	var ext string
+	switch {
+	case strings.HasPrefix(content, "iVBORw0"):
+		ext = "png"
+	case strings.HasPrefix(content, "/9j/"):
+		ext = "jpg"
+	case strings.HasPrefix(content, "R0lGOD"):
+		ext = "gif"
+	case strings.HasPrefix(content, "UklGR"):
+		ext = "webp"
+	default:
+		return content
+	}
+
+	imageBytes, err := base64.StdEncoding.DecodeString(content)
+	if err != nil {
+		return content
+	}
+
+	fileName := fmt.Sprintf("%d.%s", time.Now().UnixNano(), ext)
+	url, err := pkg.AliyunOssClient.UploadFileWithBytes(imageBytes, "gpt-image-2", fileName)
+	if err != nil {
+		return content
+	}
+
+	return fmt.Sprintf("![image](%s)", url)
+}
+
 func sendStreamData(c *gin.Context, info *relaycommon.RelayInfo, data string, forceFormat bool, thinkToContent bool) error {
 	if data == "" {
 		return nil
 	}
 
 	if !forceFormat && !thinkToContent {
-		return helper.StringData(c, data)
+		// For gpt-image-2, we still need to parse and rewrite content even without forceFormat
+		if info.OriginModelName != "gpt-image-2" {
+			return helper.StringData(c, data)
+		}
 	}
 
 	var lastStreamResponse dto.ChatCompletionsStreamResponse
 	if err := common.UnmarshalJsonStr(data, &lastStreamResponse); err != nil {
 		return err
+	}
+
+	// For gpt-image-2, replace any base64 image content with an OSS-hosted markdown image URL
+	if info.OriginModelName == "gpt-image-2" {
+		for i, choice := range lastStreamResponse.Choices {
+			if content := choice.Delta.GetContentString(); content != "" {
+				replaced := uploadBase64ImageToOss(content)
+				if replaced != content {
+					lastStreamResponse.Choices[i].Delta.SetContentString(replaced)
+				}
+			}
+		}
+		return helper.ObjectData(c, lastStreamResponse)
 	}
 
 	if !thinkToContent {
